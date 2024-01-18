@@ -16,7 +16,7 @@ int err_I = 0;
 HUSKYLENS huskylens;
 
 enum etat_e {
-    IDLE,STOP,LABA,DANCE, TURN_LEFT, TURN_RIGHT, GOBACK, READY
+    IDLE,STOP,LABA,DANCE, TURN_LEFT, TURN_RIGHT, SEARCH, GOBACK, READY
     };
 
 etat_e etat;
@@ -75,13 +75,7 @@ int isMerc(int id_color1){
 }
 
 void accelerateToBall() {
-  cmd_robot(150, 0);
-}
-
-//Distance à laquel le robot va s'arrêter si il est à moins de 140 pixels de la couleur
-bool arrColor(HUSKYLENSResult color){
-
-  return (color.height >= 140);
+  cmd_robot(120, 0);
 }
 
 float measureDistance() {
@@ -183,14 +177,6 @@ void loop() {
 
   switch (etat) {
 
-    // case CONFIG:{
-
-    //   huskylens.writeAlgorithm(ALGORITHM_COLOR_RECOGNITION);
-    //   newState(IDLE);
-    // }
-    // break;
-    
-
     case IDLE:{
     
       if(isMerc(1)){
@@ -231,32 +217,51 @@ break;
 
     case TURN_LEFT: {
 
-      while(!isMerc(numColor)){
-        cmd_robot(0, -60); 
-      }
-      newState(LABA); //Repasse en mode LABA
+      cmd_robot(0, -100); 
+      if(dealyPassed(400))
+        newState(SEARCH); //Repasse en mode LABA
       }
     break;
 
     case TURN_RIGHT: {
 
-      while(!isMerc(numColor)){
-        cmd_robot(0, 60); 
+      cmd_robot(0, 100); 
+      if(dealyPassed(400)){
+        newState(SEARCH); //Repasse en mode LABA
       }
-      newState(LABA); //Repasse en mode LABA
     }
     break;
 
-    // case GOBACK: {
+    case GOBACK: {
 
-    //   while(!isMerc(numColor)){
-    //     cmd_robot(80, 60); 
-    //   }
-    //   newState(LABA); //Repasse en mode LABA
-    //   }
-    // break;
+      cmd_robot(-100, 100); 
+      if(dealyPassed(400)){
+        newState(SEARCH); 
+      }
+    }
+    break;
 
+     case SEARCH:{
     
+      cmd_robot(0, 0);
+      if (!isMerc(numColor) && numColor == 2) {
+        if(dealyPassed(400)){
+          newState(TURN_RIGHT);
+        }
+        }else if (!isMerc(numColor) && numColor == 3){
+        if(dealyPassed(400)){
+          newState(GOBACK);
+        }
+      }else if (!isMerc(numColor) && numColor == 4){
+        if(dealyPassed(400)){
+          newState(TURN_LEFT);
+        }
+      }else{
+        newState(LABA); // Retourne en mode LABA lorsque la bonne couleur est détecté
+      }
+    }
+      break;  
+ 
     case DANCE:{
 
       cmd_robot(0, 500);
